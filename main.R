@@ -2,6 +2,7 @@ library(tidyverse)
 library(caret)
 library(corrplot)
 library(stringr)
+library(randomForest)
 
 training <- read_csv('train.csv')
 testing <- read_csv('test.csv')
@@ -41,3 +42,9 @@ testing_set = training[-inTrain,]
 
 numeric_cols = na.omit(full[, list])
 corrplot(cor(numeric_cols), method = "circle")
+
+
+
+randomForest(Survived~.,data=training_set)
+
+
