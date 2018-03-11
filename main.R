@@ -31,10 +31,8 @@ list <-
 
 full[, list] <- lapply(full[, list], function(x) {
   y <- as.factor(x)
-  y <- as.numeric(y)
   y
 })
-str(full)
 
 inTrain = createDataPartition(training$Survived, p = 3 / 4)[[1]]
 training_set = training[inTrain,]
