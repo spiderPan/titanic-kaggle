@@ -12,6 +12,7 @@ rm(training,testing)
 summary(full)
 head(full)
 str(full)
+tail(full)
 
 full$Survived<-as.factor(full$Survived)
 full$Pclass<-as.factor(full$Pclass)
