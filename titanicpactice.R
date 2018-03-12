@@ -7,7 +7,7 @@ training<-read_csv('train.csv')
 testing<-read_csv(("test.csv"))
 
 full<-bind_rows(training,testing)
-rm(training)
+rm(training,testing)
 
 summary(full)
 head(full)
