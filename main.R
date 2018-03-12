@@ -15,7 +15,7 @@ str(testing)
 full <- bind_rows(training, testing)
 summary(full)
 head(full)
-
+tail(full)
 
 
 (NameSet = str_split_fixed(full$Name, ',', 2))
