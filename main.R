@@ -8,6 +8,7 @@ training <- read_csv('train.csv')
 testing <- read_csv('test.csv')
 
 str(training)
+
 str(testing)
 
 
