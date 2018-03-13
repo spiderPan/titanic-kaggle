@@ -132,11 +132,12 @@ grid.arrange(a,b,c,Title,layout_matrix=
                           1,1,1,3),nrow=4)))
 
 
+full1$Ticket1<-full$Ticket
 
-
-
+full1 %>% select(c('Ticket1','Ticket','Embarked')) %>% arrange(Ticket) %>% View()
 
 full1[full1$Embarked==3 & full1$Pclass==3 & full1$Fare>40,] %>% View()
+
 
 
 inTrain = createDataPartition(training$Survived, p = 3 / 4)[[1]]
