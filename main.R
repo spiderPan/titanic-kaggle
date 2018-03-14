@@ -70,8 +70,15 @@ full$Ticket
 
 full$Ticket2<-full1$Ticket
 
-full[,c("Embarked","Ticket","Ticket2")] %>% filter(Ticket2>35, Ticket2<60) %>% unique() %>% View()
+full[,c("Embarked","Ticket","Ticket2")] %>% filter(Ticket2>35, Ticket2<50) %>% unique() %>% View()
 
+
+(m<-full[1:891,] %>% ggplot(aes(Ticket2,fill=factor(Survived)))+
+    geom_histogram(position = 'fill')+theme(legend.position='none'))
+(n<-full1[1:891,] %>% filter(!Ticket %in% c(63,837)) %>% 
+    select(Ticket,Embarked) %>% unique() %>% 
+    ggplot(aes(Ticket,Embarked))+geom_col())
+grid.arrange(n,m)
 
 
 
@@ -87,6 +94,8 @@ full1 %>% filter(Cabin==29) %>% str()
 
 
 full1 %>% group_by(Embarked) %>% summarise(count=n())
+
+full1 %>% select(Embarked,Pclass) %>% table()
 
 
 full1 %>% select(Ticket,Embarked) %>% table()
@@ -149,7 +158,27 @@ grid.arrange(a,b,c,Title,layout_matrix=
 
 # full1[full1$Embarked==3 & full1$Pclass==3 & full1$Fare>40,] %>% View()
 full <- bind_rows(training, testing)
-full %>% filter(!is.na(Cabin)) %>% select(Cabin,Ticket) %>% View()
+full %>% filter(!is.na(Cabin)) %>% select(Cabin,Ticket,Pclass,Fare) %>% View()
+
+str(full)
+sapply(full,function(x) sum(is.na(x)))
+
+str(full1)
+
+non_na_cabin<-full %>% filter(!is.na(Cabin)) %>% select('Cabin','Ticket','FamilyId')
+
+combined <- full %>% left_join(non_na_cabin,by='FamilyId')
+
+full$FamilyId<-full1$IsFamily
+
+New_Cabin<-full %>% filter(!is.na(Cabin)) %>% 
+  mutate(CabinCN=if_else(is.na(str_extract(Cabin,WRD %R% one_or_more(DGT))),Cabin,str_extract(Cabin,WRD %R% one_or_more(DGT))),
+         CabinC=str_extract(Cabin,WRD),
+         CabinN=str_extract(Cabin,optional(DGT) %R% optional(DGT) %R% optional(DGT) %R% END))
+
+str(New_Cabin)
+summary(New_Cabin)
+
 
 
 
