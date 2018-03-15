@@ -23,21 +23,23 @@ sapply(full,function(x) sum(is.na(x)))
 ## Visualize Discrete Single Variables
 vis_bar<-function(dataset,variable){
   
+  dataset$variable<-dataset[[variable]]
+  
   (g1<-dataset %>% filter(!is.na(Survived)) %>% 
-     ggplot(aes(dataset[[variable]],fill=as.factor(Survived)))+geom_bar(position = "stack")+
+     ggplot(aes(variable,fill=as.factor(Survived)))+geom_bar(position = "stack")+
      theme_economist()+labs(fill="Survived",x=variable))
   
   (g2<-dataset %>% filter(!is.na(Survived)) %>% 
-      ggplot(aes(dataset[[variable]],fill=as.factor(Survived)))+geom_bar(position = "fill")+
+      ggplot(aes(variable,fill=as.factor(Survived)))+geom_bar(position = "fill")+
       theme_economist()+labs(fill="Survived",x=variable))
   
   (g3<-dataset %>% filter(!is.na(Survived)) %>% 
-      ggplot(aes(dataset[[variable]],fill=as.factor(Survived)))+geom_bar(position = "dodge")+
+      ggplot(aes(variable,fill=as.factor(Survived)))+geom_bar(position = "dodge")+
       theme_economist()+labs(fill="Survived",x=variable))
   
   (Title<- ggplot(data=data.frame(x=0,y=0))+geom_point(aes(x=x,y=y),size=-1)+
       labs(x="",y="")+
-      annotate('text', x = 0, y = 0, label = paste0(variable," vs Survived \n multi_views"),size=8)+
+      annotate('text', x = 0, y = 0, label = paste0(variable," vs Survived \n multi_views"),size=5)+
       theme(axis.text.x = element_blank(),axis.text.y = element_blank(),axis.ticks = element_blank(),
             panel.background = element_blank(),
             panel.border = element_blank(),
@@ -50,21 +52,23 @@ vis_bar<-function(dataset,variable){
 ## Visualize Continuous Single Variables
 vis_hist<-function(dataset,variable,binwidths=5){
   
+  dataset$variable<-dataset[[variable]]
+  
   (g1<-dataset %>% filter(!is.na(Survived)) %>% 
-     ggplot(aes(dataset[[variable]],fill=as.factor(Survived)))+geom_histogram(position = "stack",binwidth = binwidths)+
+     ggplot(aes(variable,fill=as.factor(Survived)))+geom_histogram(position = "stack",binwidth = binwidths)+
      theme_economist()+labs(fill="Survived",x=variable))
   
   (g2<-dataset %>% filter(!is.na(Survived)) %>% 
-      ggplot(aes(dataset[[variable]],fill=as.factor(Survived)))+geom_histogram(position = "fill",binwidth = binwidths)+
+      ggplot(aes(variable,fill=as.factor(Survived)))+geom_histogram(position = "fill",binwidth = binwidths)+
       theme_economist()+labs(fill="Survived",x=variable))
   
   (g3<-dataset %>% filter(!is.na(Survived)) %>% 
-      ggplot(aes(dataset[[variable]],fill=as.factor(Survived)))+geom_histogram(position = "dodge",binwidth = binwidths)+
+      ggplot(aes(variable,fill=as.factor(Survived)))+geom_histogram(position = "dodge",binwidth = binwidths)+
       theme_economist()+labs(fill="Survived",x=variable))
   
   (Title<- ggplot(data=data.frame(x=0,y=0))+geom_point(aes(x=x,y=y),size=-1)+
       labs(x="",y="")+
-      annotate('text', x = 0, y = 0, label = paste0(variable," vs Survived \n multi_views"),size=8)+
+      annotate('text', x = 0, y = 0, label = paste0(variable," vs Survived \n multi_views"),size=5)+
       theme(axis.text.x = element_blank(),axis.text.y = element_blank(),axis.ticks = element_blank(),
             panel.background = element_blank(),
             panel.border = element_blank(),
@@ -77,21 +81,24 @@ vis_hist<-function(dataset,variable,binwidths=5){
 ## Visualize Discrete Multiple Variables
 vis_bar_multi<-function(dataset,variable1,variable2){
   
+  dataset$variable1<-dataset[[variable1]]
+  dataset$variable2<-dataset[[variable2]]
+  
   (g1<-dataset %>% filter(!is.na(Survived)) %>% 
-     ggplot(aes(dataset[[variable1]],fill=as.factor(Survived)))+geom_bar(position = "stack")+
-     theme_economist()+facet_grid(.~dataset[[variable2]])+labs(fill="Survived",x=variable1))
+      ggplot(aes(variable1,fill=as.factor(Survived)))+geom_bar(position = "stack")+
+      theme_economist()+facet_grid(.~variable2)+labs(fill="Survived",x=variable1))
   
   (g2<-dataset %>% filter(!is.na(Survived)) %>% 
-      ggplot(aes(dataset[[variable1]],fill=as.factor(Survived)))+geom_bar(position = "fill")+
-      theme_economist()+facet_grid(.~dataset[[variable2]])+labs(fill="Survived",x=variable1))
+      ggplot(aes(variable1,fill=as.factor(Survived)))+geom_bar(position = "fill")+
+      theme_economist()+facet_grid(.~variable2)+labs(fill="Survived",x=variable1))
   
   (g3<-dataset %>% filter(!is.na(Survived)) %>% 
-      ggplot(aes(dataset[[variable1]],fill=as.factor(Survived)))+geom_bar(position = "dodge")+
-      theme_economist()+facet_grid(.~dataset[[variable2]])+labs(fill="Survived",x=variable1))
+      ggplot(aes(variable1,fill=as.factor(Survived)))+geom_bar(position = "dodge")+
+      theme_economist()+facet_grid(.~variable2)+labs(fill="Survived",x=variable1))
   
   (Title<- ggplot(data=data.frame(x=0,y=0))+geom_point(aes(x=x,y=y),size=-1)+
       labs(x="",y="")+
-      annotate('text', x = 0, y = 0, label = paste0(variable1," vs ",variable2," vs Survived \n multi_views"),size=8)+
+      annotate('text', x = 0, y = 0, label = paste0(variable1," vs ",variable2," vs Survived \n multi_views"),size=5)+
       theme(axis.text.x = element_blank(),axis.text.y = element_blank(),axis.ticks = element_blank(),
             panel.background = element_blank(),
             panel.border = element_blank(),
@@ -104,21 +111,24 @@ vis_bar_multi<-function(dataset,variable1,variable2){
 ## Visualize Continuous Single Variables
 vis_hist_multi<-function(dataset,variable1,variable2,binwidths=5){
   
+  dataset$variable1<-dataset[[variable1]]
+  dataset$variable2<-dataset[[variable2]]
+  
   (g1<-dataset %>% filter(!is.na(Survived)) %>% 
-     ggplot(aes(dataset[[variable1]],fill=as.factor(Survived)))+geom_histogram(position = "stack",binwidth = binwidths)+
-     theme_economist()+facet_grid(.~dataset[[variable2]])+labs(fill="Survived",x=variable1))
+     ggplot(aes(variable1,fill=as.factor(Survived)))+geom_histogram(position = "stack",binwidth = binwidths)+
+     theme_economist()+facet_grid(.~variable2)+labs(fill="Survived",x=variable1))
   
   (g2<-dataset %>% filter(!is.na(Survived)) %>% 
-      ggplot(aes(dataset[[variable1]],fill=as.factor(Survived)))+geom_histogram(position = "fill",binwidth = binwidths)+
-      theme_economist()+facet_grid(.~dataset[[variable2]])+labs(fill="Survived",x=variable1))
+      ggplot(aes(variable1,fill=as.factor(Survived)))+geom_histogram(position = "fill",binwidth = binwidths)+
+      theme_economist()+facet_grid(.~variable2)+labs(fill="Survived",x=variable1))
   
   (g3<-dataset %>% filter(!is.na(Survived)) %>% 
-      ggplot(aes(dataset[[variable1]],fill=as.factor(Survived)))+geom_histogram(position = "dodge",binwidth = binwidths)+
-      theme_economist()+facet_grid(.~dataset[[variable2]])+labs(fill="Survived",x=variable1))
+      ggplot(aes(variable1,fill=as.factor(Survived)))+geom_histogram(position = "dodge",binwidth = binwidths)+
+      theme_economist()+facet_grid(.~variable2)+labs(fill="Survived",x=variable1))
   
   (Title<- ggplot(data=data.frame(x=0,y=0))+geom_point(aes(x=x,y=y),size=-1)+
       labs(x="",y="")+
-      annotate('text', x = 0, y = 0, label = paste0(variable1," vs ",variable2," vs Survived \n multi_views"),size=8)+
+      annotate('text', x = 0, y = 0, label = paste0(variable1," vs ",variable2," vs Survived \n multi_views"),size=5)+
       theme(axis.text.x = element_blank(),axis.text.y = element_blank(),axis.ticks = element_blank(),
             panel.background = element_blank(),
             panel.border = element_blank(),
@@ -130,20 +140,33 @@ vis_hist_multi<-function(dataset,variable1,variable2,binwidths=5){
 
 # EDA - part 1 direct one variable
 ## Age
-vis_hist(train,"Age",5)
+train %>% vis_hist("Age")
 
 ## Sex
-vis_bar(train,"Sex")
+train %>% vis_bar("Sex")
 
 ## Pclass
-vis_bar(train,"Pclass")
+train %>% vis_bar("Pclass")
 
-# SibSp
-vis_bar(train,"SibSp")
+## SibSp
+train %>% vis_bar("SibSp")
 
-# Parch
-vis_bar(train, "Parch")
+## Parch
+train %>% vis_bar("Parch")
 
-# Embarked
-vis_bar(train, "Embarked")
+## Embarked
+train %>% vis_bar("Embarked")
+
+# EDA - part 2 direct multi variable
+## Age vs Sex
+train %>% vis_hist_multi("Age","Sex")
+
+## Age vs Pclass
+train %>% vis_hist_multi("Age","Pclass")
+
+## Pclass vs Sex
+train %>% vis_bar_multi("Pclass","Sex")
+
+## Embarked
+train %>% vis_bar_multi("Embarked","Pclass")
 
