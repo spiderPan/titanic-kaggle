@@ -138,35 +138,39 @@ vis_hist_multi<-function(dataset,variable1,variable2,binwidths=5){
                                                        3,4),nrow=2)))
 }
 
-# EDA - part 1 direct one variable
-## Age
+# EDA
+##part 1 direct one variable
+### Age
 train %>% vis_hist("Age")
 
-## Sex
+#### Sex
 train %>% vis_bar("Sex")
 
-## Pclass
+### Pclass
 train %>% vis_bar("Pclass")
 
-## SibSp
+### SibSp
 train %>% vis_bar("SibSp")
 
-## Parch
+### Parch
 train %>% vis_bar("Parch")
 
-## Embarked
+### Embarked
 train %>% vis_bar("Embarked")
 
-# EDA - part 2 direct multi variable
-## Age vs Sex
+## Part 2 direct multi variable
+### Age vs Sex
 train %>% vis_hist_multi("Age","Sex")
 
-## Age vs Pclass
+### Age vs Pclass
 train %>% vis_hist_multi("Age","Pclass")
 
-## Pclass vs Sex
+### Pclass vs Sex
 train %>% vis_bar_multi("Pclass","Sex")
 
-## Embarked
+### Embarked vs Pclass
 train %>% vis_bar_multi("Embarked","Pclass")
+
+## part 3 Data Processing
+
 
