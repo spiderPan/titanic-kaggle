@@ -172,5 +172,11 @@ train %>% vis_bar_multi("Pclass","Sex")
 train %>% vis_bar_multi("Embarked","Pclass")
 
 ## part 3 Data Processing
+name_orig<-full$Name
+full <- full %>% separate(Name,sep=",",c('Surname','FirstName')) %>%
+  separate(FirstName,sep="\\. ",c('Title','Firstname')) %>% 
+  mutate(Title=trimws(Title))
+
+full %>% str()
 
 
