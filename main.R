@@ -180,6 +180,9 @@ str(New_Cabin)
 summary(New_Cabin)
 
 
+New_Cabin %>% 
+
+
 
 
 inTrain = createDataPartition(training$Survived, p = 3 / 4)[[1]]
