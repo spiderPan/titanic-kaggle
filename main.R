@@ -8,6 +8,9 @@ library(rebus)
 training <- read_csv('data/train.csv')
 testing <- read_csv('data/test.csv')
 
+training <- train
+testing <- test
+  
 str(training)
 
 str(testing)

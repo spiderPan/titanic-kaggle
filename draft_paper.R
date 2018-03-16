@@ -22,6 +22,4 @@ full<-full %>% filter(!is.na(Age)) %>% group_by(Title) %>%
   summarise(avg_age=median(Age)) %>% right_join(full,by='Title') %>% 
   mutate(Adj_Age=if_else(is.na(Age),avg_age,Age))
 
-
 rm(full1)
-

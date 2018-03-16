@@ -5,6 +5,11 @@ library(ggthemes)
 library(corrplot)
 library(caret)
 library(gridExtra)
+library(rpart)
+library(rattle)
+library(rpart.plot)
+library(e1071)
+library(mxnet)
 
 # Load datasets
 train<-read_csv("data/train.csv")
@@ -261,15 +266,66 @@ selected[1:891,] %>% sapply(function(x) as.numeric(as.factor(x))) %>% cor() %>% 
 selected[,!colnames(selected) %in% c("Adj_Fare")]<-selected[,!colnames(selected) %in% c("Adj_Fare")] %>% 
   lapply(function(x) as.factor(x))
 
-
 # Modeling
 train<-selected[1:891,]
 test<-selected[892:1309,]
 
+train(Survived~.,data=train,trControl=trainControl(method='cv',number=10),method='rpart')
+train(Survived~.,data=train,trControl=trainControl(method='cv',number=10),method='rf')
+train(Survived~.,data=train,trControl=trainControl(method='cv',number=10),method='ranger')
+
+
+# C Forest
+(cforest<-train(Survived~.,data=train,
+               #trControl=trainControl(method="repeatedcv", number=5, repeats=5),
+               method='cforest',
+               controls = cforest_unbiased(ntree = 1000)))
+
+
+# xgboost
+trControl <- trainControl(method="repeatedcv", number=5, repeats=5);
+xgbGrid <- expand.grid(nrounds=c(30),
+                       max_depth=c(8),
+                       eta=c(0.1),
+                       colsample_bytree=c(0.5),
+                       subsample=c(1),
+                       gamma=c(0),
+                       min_child_weight=c(3))
+
+(model.xgb <- train(Survived~.,data=train,trControl=trControl,method='xgbTree',
+      tuneGrid = xgbGrid))
+
+xgb_pred <- predict(model.xgb,test)
+
+
+
+## Decision Tree
+dt_model<-rpart(Survived~.,train)
+fancyRpartPlot(dt_model)
+rpart.plot(dt_model)
+dt_pred <- predict(dt_model,test,type="class")
+
+varImp(dt_model)
+
+## svm
+test$Survived <- NULL
+svm_model <- svm(Survived~.,train)
+svm_pred <- predict(svm_model,test)
+
+
+## RandomForest
 rf_model <- randomForest(Survived~.,train)
 rf_pred <- predict(rf_model,test)
 
-solution <- data.frame(PassengerId = full[892:1309,]$PassengerId,Survived = rf_pred)
+cbind(dt_pred,svm_pred,rf_pred)
+
+importance(rf_model) %>% as.data.frame() %>% rownames_to_column("Var") %>% 
+  ggplot(aes(reorder(Var,MeanDecreaseGini),MeanDecreaseGini,fill=MeanDecreaseGini))+geom_col()+
+  coord_flip()+theme_few()+labs(x='',y='')+theme(legend.position = 'none')
+
+varImpPlot(rf_model)
+
+solution <- data.frame(PassengerId = full[892:1309,]$PassengerId,Survived = xgb_pred)
 
 # .csv
-write.csv(solution, file = 'rf_model.csv', row.names = F)
+write.csv(solution, file = 'xgb_model.csv', row.names = F)
