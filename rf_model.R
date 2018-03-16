@@ -215,5 +215,24 @@ full %>% filter(!Ticket %in% c('113572')) %>% select(F_Ticket,Embarked) %>%
 
 full[is.na(full$Embarked),]$Embarked<-'S'
 
-### Impute: Fare
+### New Variable: Adj_Fare
+full <- full %>% group_by(Ticket) %>% summarise(ppl_ticket=n()) %>%
+  right_join(full,by='Ticket') %>% mutate(Adj_Fare=Fare/ppl_ticket)
+
+
+full[is.na(full$Fare),] %>% View()
+
+full %>% filter(Pclass==3) %>% select(Adj_Fare) %>% summary()
+
+full %>% filter(Pclass==3) %>% ggplot(aes(Adj_Fare))+
+  geom_density(size=.5,alpha=.5,fill='grey')+
+  geom_vline(aes(xintercept=median(Adj_Fare,na.rm=T)),lty=2,lwd=1.5,col='firebrick')+
+  theme_few()
+
+full[is.na(full$Fare),]$Adj_Fare <- median(full[full$Pclass==3,]$Adj_Fare,na.rm=T)
+
+
+
+
+
 
