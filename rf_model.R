@@ -231,8 +231,45 @@ full %>% filter(Pclass==3) %>% ggplot(aes(Adj_Fare))+
 
 full[is.na(full$Fare),]$Adj_Fare <- median(full[full$Pclass==3,]$Adj_Fare,na.rm=T)
 
+full[1:891,] %>% vis_hist('Adj_Fare')
+full[1:891,] %>% vis_hist_multi('Adj_Fare','Pclass')
 
 
+### New Variable: Adj_Age
+full %>% filter(is.na(Age)) %>% group_by(Title) %>% summarise(num_ppl=n())
+
+full <- full %>% filter(!is.na(Age)) %>% group_by(Title) %>% 
+  summarise(avg_age=median(Age)) %>% right_join(full,by='Title') %>% 
+  mutate(Adj_Age=if_else(is.na(Age),avg_age,Age))
+
+full[1:891,] %>% vis_hist('Adj_Age')
+
+### New Variable: Child
+full$Child[full$Adj_Age < 18] <- 'Child'
+full$Child[full$Adj_Age >= 18] <- 'Adult'
+
+full[1:891,] %>% vis_bar_multi('Child','Sex')
+full[1:891,] %>% vis_bar_multi('Child','Pclass')
 
 
+rm(vis_bar,vis_bar_multi,vis_hist,vis_hist_multi)
 
+## Correlation
+selected<-full %>% select(Survived,Title,Sex,Pclass,FsizeD,Adj_Fare,Embarked,Child)
+selected[1:891,] %>% sapply(function(x) as.numeric(as.factor(x))) %>% cor() %>% corrplot.mixed(upper='ellipse')
+
+selected[,!colnames(selected) %in% c("Adj_Fare")]<-selected[,!colnames(selected) %in% c("Adj_Fare")] %>% 
+  lapply(function(x) as.factor(x))
+
+
+# Modeling
+train<-selected[1:891,]
+test<-selected[892:1309,]
+
+rf_model <- randomForest(Survived~.,train)
+rf_pred <- predict(rf_model,test)
+
+solution <- data.frame(PassengerId = full[892:1309,]$PassengerId,Survived = rf_pred)
+
+# .csv
+write.csv(solution, file = 'rf_model.csv', row.names = F)
