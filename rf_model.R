@@ -172,11 +172,38 @@ train %>% vis_bar_multi("Pclass","Sex")
 train %>% vis_bar_multi("Embarked","Pclass")
 
 ## part 3 Data Processing
+### New Var: Title
 name_orig<-full$Name
 full <- full %>% separate(Name,sep=",",c('Surname','FirstName')) %>%
   separate(FirstName,sep="\\. ",c('Title','Firstname')) %>% 
   mutate(Title=trimws(Title))
 
-full %>% str()
+full %>% group_by(Title) %>% summarise(avg_age=mean(Age,na.rm=T),
+                                       num_ppl=n(),survival_rate=mean(Survived,na.rm=T))
 
+#### Reassign rare titles
+officer <- c('Capt', 'Col', 'Don', 'Dr', 'Major', 'Rev')
+royalty <- c('Dona', 'Lady', 'the Countess','Sir', 'Jonkheer')
+
+#### Reassign mlle, ms, and mme, and rare
+full$Title[full$Title == 'Mlle']        <- 'Miss' 
+full$Title[full$Title == 'Ms']          <- 'Miss'
+full$Title[full$Title == 'Mme']         <- 'Mrs' 
+full$Title[full$Title %in% royalty]     <- 'Royalty'
+full$Title[full$Title %in% officer]     <- 'Officer'
+rm(royalty,officer)
+
+full %>% filter(!is.na(Survived)) %>% vis_bar('Title')
+
+### New Var: Family Sizes
+full$Fsize <- full$SibSp+full$Parch+1
+full[1:891,] %>%  vis_bar('Fsize')
+
+full$FsizeD[full$Fsize == 1] <- 'Alone'
+full$FsizeD[full$Fsize < 5 & full$Fsize > 1] <- 'Small'
+full$FsizeD[full$Fsize > 4] <- 'Big'
+
+full[1:891,] %>% vis_bar('FsizeD')
+
+### Impute: Embarked
 
