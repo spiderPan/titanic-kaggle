@@ -98,11 +98,11 @@ full1 %>% group_by(Embarked) %>% summarise(count=n())
 full1 %>% select(Embarked,Pclass) %>% table()
 
 
-full1 %>% select(Ticket,Embarked) %>% table()
-full1 %>% filter(!Ticket %in% c(63,837)) %>% select(Ticket,Embarked) %>% unique() %>% 
+full %>% select(Ticket,Embarked) %>% table()
+full %>% filter(!Ticket %in% c(63,837)) %>% select(Ticket,Embarked) %>% unique() %>% 
   ggplot(aes(Ticket,Embarked))+geom_col()
 
-full1 %>% select(Ticket,Embarked) %>% unique() %>% filter(Ticket<60) %>% 
+full %>% select(Ticket,Embarked) %>% unique() %>% filter(Ticket<60) %>% 
   ggplot(aes(Ticket,Embarked))+geom_col()+geom_vline(aes(xintercept=43),col='firebrick',lty=2,size=2)
 
 full1 %>% select(Ticket,Embarked) %>% unique() %>% 

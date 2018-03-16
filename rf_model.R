@@ -191,7 +191,7 @@ full$Title[full$Title == 'Ms']          <- 'Miss'
 full$Title[full$Title == 'Mme']         <- 'Mrs' 
 full$Title[full$Title %in% royalty]     <- 'Royalty'
 full$Title[full$Title %in% officer]     <- 'Officer'
-rm(royalty,officer)
+rm(royalty,officer,train,test,name_orig)
 
 full %>% filter(!is.na(Survived)) %>% vis_bar('Title')
 
@@ -206,4 +206,14 @@ full$FsizeD[full$Fsize > 4] <- 'Big'
 full[1:891,] %>% vis_bar('FsizeD')
 
 ### Impute: Embarked
+full$F_Ticket<-as.numeric(as.factor(full$Ticket))
+
+full %>% filter(!Ticket %in% c('113572')) %>% select(F_Ticket,Embarked) %>%
+  unique() %>% filter(F_Ticket<60 & F_Ticket>25) %>% 
+  ggplot(aes(F_Ticket,Embarked))+
+  geom_col()+geom_vline(aes(xintercept=43),col='firebrick',lty=2,size=2)
+
+full[is.na(full$Embarked),]$Embarked<-'S'
+
+### Impute: Fare
 
