@@ -1,25 +1,131 @@
+# gbm
+(gbm<-train(Survived~.,data=train,
+            trControl=trainControl(method="repeatedcv", number=5, repeats=5),
+            method='gbm'))
 
-# Fare
-full<-full %>% group_by(Ticket) %>% summarise(ppl_ticket=n()) %>%
-  right_join(full,by='Ticket') %>% mutate(Adj_Fare=Fare/ppl_ticket)
+gbm_pred <- predict(gbm,test)
+rm(gbm)
 
-full %>% View()
+# rrlda
+(rrlda<-train(Survived~.,data=train,
+              trControl=trainControl(method="repeatedcv", number=5, repeats=5),
+              method='rrlda'))
 
-str(full)
+rrlda_pred <- predict(rrlda,test)
+rm(rrlda)
 
-full[is.na(full1$Fare),] %>% View()
+# da
+(da<-train(Survived~.,data=train,
+           trControl=trainControl(method="repeatedcv", number=5, repeats=5),
+           method='dda'))
 
-full %>% filter(Pclass==3) %>% ggplot(aes(Adj_Fare))+
-  geom_density(size=.5,alpha=.5,fill='grey')+
-  geom_vline(aes(xintercept=median(Adj_Fare,na.rm=T)),lty=2,lwd=1.5,col='firebrick')+
-  theme_few()
-full %>% filter(Pclass==3) %>% select(Adj_Fare) %>% summary()
+da_pred <- predict(da,test)
+rm(da)
 
-# Age
-full %>% filter(is.na(Age)) %>% group_by(Title) %>% summarise(num_ppl=n())
+# log
+(log<-train(Survived~.,data=train,
+            trControl=trainControl(method="repeatedcv", number=5, repeats=5),
+            method='regLogistic'))
 
-full<-full %>% filter(!is.na(Age)) %>% group_by(Title) %>% 
-  summarise(avg_age=median(Age)) %>% right_join(full,by='Title') %>% 
-  mutate(Adj_Age=if_else(is.na(Age),avg_age,Age))
+log_pred <- predict(log,test)
+rm(log)
 
-rm(full1)
+# glm
+(glm<-train(Survived~.,data=train,
+            trControl=trainControl(method="repeatedcv", number=5, repeats=5),
+            method='glmnet'))
+
+glm_pred <- predict(glm,test)
+rm(glm)
+
+
+# keras
+# (keras<-train(Survived~.,data=train,
+#             trControl=trainControl(method="repeatedcv", number=5, repeats=5),
+#             method='mlpKerasDropout'))
+# 
+# keras_pred <- predict(keras,test)
+# 
+# confusionMatrix(keras_pred,test$Survived)
+# rm(keras)
+
+# knn
+(knn<-train(Survived~.,data=train,
+            trControl=trainControl(method="repeatedcv", number=5, repeats=5),
+            method='kknn'))
+
+knn_pred <- predict(knn,test)
+rm(knn)
+
+# Naive Bay
+(nb<-train(Survived~.,data=train,
+           trControl=trainControl(method="repeatedcv", number=5, repeats=5),
+           method='naive_bayes'))
+
+nb_pred <- predict(nb,test)
+rm(nb)
+
+# Gaussian Process
+(gp<-train(Survived~.,data=train,
+           trControl=trainControl(method="repeatedcv", number=5, repeats=5),
+           method='gaussprPoly'))
+
+gp_pred <- predict(gp,test)
+rm(gp)
+
+# svm
+(svm<-train(Survived~.,data=train,
+            trControl=trainControl(method="repeatedcv", number=5, repeats=5),
+            method='svmLinearWeights'))
+
+svm_pred <- predict(svm,test)
+rm(svm)
+
+# adaboost
+(adaboost<-train(Survived~.,data=train,
+                 trControl=trainControl(method="repeatedcv", number=5, repeats=5),
+                 method='adaboost'))
+
+ada_pred <- predict(adaboost,test)
+rm(adaboost)
+
+# CForest
+(cforest<-train(Survived~.,data=train,
+                #trControl=trainControl(method="repeatedcv", number=5, repeats=5),
+                method='cforest',
+                controls = cforest_unbiased(ntree = 1000)))
+cforest_pred <- predict(cforest,test)
+rm(cforest)
+
+# xgboost
+trControl <- trainControl(method="repeatedcv", number=5, repeats=5);
+xgbGrid <- expand.grid(nrounds=c(30),
+                       max_depth=c(8),
+                       eta=c(0.1),
+                       colsample_bytree=c(0.5),
+                       subsample=c(1),
+                       gamma=c(0),
+                       min_child_weight=c(3))
+
+(model.xgb <- train(Survived~.,data=train,trControl=trControl,method='xgbTree',
+                    tuneGrid = xgbGrid))
+
+xgb_pred <- predict(model.xgb,test)
+rm(trControl,xgbGrid,model.xgb)
+
+# combine
+combine<-bind_cols(ada=ada_pred,
+                   cforest=cforest_pred,
+                   svm=svm_pred,
+                   xgb=xgb_pred,
+                   gp=gp_pred,
+                   nb=nb_pred,
+                   knn=knn_pred,
+                   # keras=keras_pred,
+                   glm=glm_pred,
+                   log=log_pred,
+                   da=da_pred,
+                   rrlda=rrlda_pred,
+                   gbm=gbm_pred) %>%
+  sapply(function(x) as.numeric(as.character(x)))
+
