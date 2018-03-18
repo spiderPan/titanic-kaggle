@@ -6,10 +6,12 @@ library(corrplot)
 library(caret)
 library(gridExtra)
 library(rpart)
-library(rattle)
 library(rpart.plot)
 library(e1071)
-library(mxnet)
+library(party)
+library(fastAdaboost)
+library(kernlab)
+library(kknn)
 
 # Load datasets
 train<-read_csv("data/train.csv")
@@ -183,6 +185,8 @@ full <- full %>% separate(Name,sep=",",c('Surname','FirstName')) %>%
   separate(FirstName,sep="\\. ",c('Title','Firstname')) %>% 
   mutate(Title=trimws(Title))
 
+detach("package:plyr", unload=TRUE) 
+
 full %>% group_by(Title) %>% summarise(avg_age=mean(Age,na.rm=T),
                                        num_ppl=n(),survival_rate=mean(Survived,na.rm=T))
 
@@ -225,7 +229,7 @@ full <- full %>% group_by(Ticket) %>% summarise(ppl_ticket=n()) %>%
   right_join(full,by='Ticket') %>% mutate(Adj_Fare=Fare/ppl_ticket)
 
 
-full[is.na(full$Fare),] %>% View()
+full[is.na(full$Fare),] %>% head()
 
 full %>% filter(Pclass==3) %>% select(Adj_Fare) %>% summary()
 
@@ -270,17 +274,70 @@ selected[,!colnames(selected) %in% c("Adj_Fare")]<-selected[,!colnames(selected)
 train<-selected[1:891,]
 test<-selected[892:1309,]
 
-train(Survived~.,data=train,trControl=trainControl(method='cv',number=10),method='rpart')
-train(Survived~.,data=train,trControl=trainControl(method='cv',number=10),method='rf')
-train(Survived~.,data=train,trControl=trainControl(method='cv',number=10),method='ranger')
+rm(full,selected)
 
+# Cross Validation
+inTrain <- createDataPartition(train$Survived,p=.7,list=F)
+ctrain  <- train[inTrain,]
+validation <- train[-inTrain,]
+rm(inTrain)
 
-# C Forest
-(cforest<-train(Survived~.,data=train,
+# Naive Bay
+(nb<-train(Survived~.,data=ctrain,
+           trControl=trainControl(method="repeatedcv", number=5, repeats=5),
+           method='	naive_bayes'))
+
+nb_pred <- predict(nb,validation)
+
+confusionMatrix(nb_pred,validation$Survived)
+
+# Naive Bay
+(nb<-train(Survived~.,data=ctrain,
+           trControl=trainControl(method="repeatedcv", number=5, repeats=5),
+           method='	naive_bayes'))
+
+nb_pred <- predict(nb,validation)
+
+confusionMatrix(nb_pred,validation$Survived)
+
+# Gaussian Process
+(gp<-train(Survived~.,data=ctrain,
+            trControl=trainControl(method="repeatedcv", number=5, repeats=5),
+            method='gaussprPoly'))
+
+gp_pred <- predict(gp,validation)
+
+confusionMatrix(gp_pred,validation$Survived)
+rm(gp)
+
+# svm
+(svm<-train(Survived~.,data=ctrain,
+                 trControl=trainControl(method="repeatedcv", number=5, repeats=5),
+                 method='svmLinearWeights'))
+
+svm_pred <- predict(svm,validation)
+
+confusionMatrix(svm_pred,validation$Survived)
+rm(svm)
+
+# adaboost
+(adaboost<-train(Survived~.,data=ctrain,
+                trControl=trainControl(method="repeatedcv", number=5, repeats=5),
+                method='adaboost'))
+
+ada_pred <- predict(adaboost,validation)
+
+confusionMatrix(ada_pred,validation$Survived)
+rm(adaboost)
+
+# CForest
+(cforest<-train(Survived~.,data=ctrain,
                #trControl=trainControl(method="repeatedcv", number=5, repeats=5),
                method='cforest',
                controls = cforest_unbiased(ntree = 1000)))
-
+cforest_pred <- predict(cforest,validation)
+confusionMatrix(cforest_pred,validation$Survived)
+rm(cforest)
 
 # xgboost
 trControl <- trainControl(method="repeatedcv", number=5, repeats=5);
@@ -292,40 +349,43 @@ xgbGrid <- expand.grid(nrounds=c(30),
                        gamma=c(0),
                        min_child_weight=c(3))
 
-(model.xgb <- train(Survived~.,data=train,trControl=trControl,method='xgbTree',
+(model.xgb <- train(Survived~.,data=ctrain,trControl=trControl,method='xgbTree',
       tuneGrid = xgbGrid))
 
-xgb_pred <- predict(model.xgb,test)
+xgb_pred <- predict(model.xgb,validation)
+confusionMatrix(xgb_pred,validation$Survived)
+rm(trControl,xgbGrid,model.xgb)
+
+combine<-bind_cols(Survived=validation$Survived,
+                   ada=ada_pred,
+                   cforest=cforest_pred,
+                   svm=svm_pred,
+                   xgb=xgb_pred,
+                   gp=gp_pred,
+                   nb=nb_pred) %>%
+  sapply(function(x) as.numeric(as.character(x)))
+
+corrplot.mixed(cor(combine),upper = 'ellipse')
 
 
 
-## Decision Tree
-dt_model<-rpart(Survived~.,train)
-fancyRpartPlot(dt_model)
-rpart.plot(dt_model)
-dt_pred <- predict(dt_model,test,type="class")
-
-varImp(dt_model)
-
-## svm
-test$Survived <- NULL
-svm_model <- svm(Survived~.,train)
-svm_pred <- predict(svm_model,test)
 
 
-## RandomForest
-rf_model <- randomForest(Survived~.,train)
-rf_pred <- predict(rf_model,test)
 
-cbind(dt_pred,svm_pred,rf_pred)
 
-importance(rf_model) %>% as.data.frame() %>% rownames_to_column("Var") %>% 
-  ggplot(aes(reorder(Var,MeanDecreaseGini),MeanDecreaseGini,fill=MeanDecreaseGini))+geom_col()+
-  coord_flip()+theme_few()+labs(x='',y='')+theme(legend.position = 'none')
 
-varImpPlot(rf_model)
 
-solution <- data.frame(PassengerId = full[892:1309,]$PassengerId,Survived = xgb_pred)
+
+
+
+
+
+(pred<-sapply(combine,function(x){as.numeric(as.character(x))}) %>% as.data.frame() %>% 
+  mutate(Survived=if_else(cf+svm+xgb>1,1,0)) %>% select(Survived))
+
+solution <- data.frame(PassengerId = full[892:1309,]$PassengerId,Survived = pred)
+
+
 
 # .csv
-write.csv(solution, file = 'xgb_model.csv', row.names = F)
+write.csv(solution, file = 'ensemble_model.csv', row.names = F)
